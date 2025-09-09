@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-// ✅ helper to manage cookie storage
 function getUsersFromCookies() {
   const cookie = document.cookie
     .split("; ")
@@ -11,12 +10,12 @@ function getUsersFromCookies() {
 }
 
 function saveUsersToCookies(users) {
-  document.cookie = `users=${encodeURIComponent(JSON.stringify(users))}; path=/; max-age=${60 * 60 * 24 * 30}`; // 30 days
+  document.cookie = `users=${encodeURIComponent(JSON.stringify(users))}; path=/; max-age=${60 * 60 * 24 * 30}`;
 }
 
-function LoginSignup() {
-  const [mode, setMode] = useState("login"); // "login" or "signup"
-  const [username, setUsername] = useState("");
+function LoginSignup({ setUsername }) {
+  const [mode, setMode] = useState("login");
+  const [username, setUsernameInput] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -25,20 +24,18 @@ function LoginSignup() {
     let users = getUsersFromCookies();
 
     if (mode === "signup") {
-      // check if user exists
       if (users.find((u) => u.username === username)) {
         setError("User already exists. Please login.");
         return;
       }
-      // add new user
       const newUser = { username, password };
       users.push(newUser);
       saveUsersToCookies(users);
       localStorage.setItem("token", "dummy-jwt-token");
       localStorage.setItem("username", username);
+      setUsername(username);
       navigate("/");
     } else {
-      // login mode
       const user = users.find(
         (u) => u.username === username && u.password === password
       );
@@ -48,6 +45,7 @@ function LoginSignup() {
       }
       localStorage.setItem("token", "dummy-jwt-token");
       localStorage.setItem("username", username);
+      setUsername(username);
       navigate("/");
     }
   };
@@ -84,7 +82,7 @@ function LoginSignup() {
           type="text"
           placeholder="Username"
           value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          onChange={(e) => setUsernameInput(e.target.value)}
           style={{ width: "100%", padding: "10px", margin: "10px 0" }}
         />
         <input

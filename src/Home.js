@@ -1,18 +1,17 @@
 // src/Home.js
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";   // ✅ import navigate
+import { useNavigate } from "react-router-dom";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { fetchProperties, getFavorites, toggleFavorite } from "./api";
 
-function Home() {
+function Home({ username, setUsername }) {
   const [highlighted, setHighlighted] = useState([]);
   const [properties, setProperties] = useState([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [favorites, setFavorites] = useState([]);
   const [search, setSearch] = useState("");
-  const username = localStorage.getItem("username");
-  const navigate = useNavigate();   // ✅ navigation hook
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (username) {
@@ -66,14 +65,29 @@ function Home() {
   const handleLogout = () => {
     localStorage.removeItem("username");
     localStorage.removeItem("token");
-    navigate("/login");  // ✅ redirect after logout
+    setUsername(null);
+    navigate("/login");
   };
 
   const isFavorite = (id) => favorites.some((p) => p.id === id);
 
   const PropertyCard = ({ p }) => (
-    <div key={p.id} style={{ border: "1px solid #ccc", borderRadius: "8px", overflow: "hidden", position: "relative" }}>
-      <img src={p.images[0]} alt={p.name} style={{ width: "100%", height: "150px", objectFit: "cover" }} />
+    <div
+      key={p.id}
+      style={{
+        border: "1px solid #ddd",
+        borderRadius: "8px",
+        overflow: "hidden",
+        position: "relative",
+        background: "#fff",
+        boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+      }}
+    >
+      <img
+        src={p.images[0]}
+        alt={p.name}
+        style={{ width: "100%", height: "150px", objectFit: "cover" }}
+      />
       <button
         onClick={() => handleFavorite(p)}
         style={{
@@ -83,18 +97,25 @@ function Home() {
           background: "white",
           border: "1px solid #ccc",
           borderRadius: "50%",
-          width: "30px",
-          height: "30px",
-          cursor: "pointer"
+          width: "32px",
+          height: "32px",
+          cursor: "pointer",
+          fontSize: "16px",
         }}
       >
         {isFavorite(p.id) ? "❤️" : "🤍"}
       </button>
-      <div style={{ padding: "10px" }}>
-        <h3>{p.name}</h3>
-        <p>{p.currency} {p.price}</p>
-        <p>{p.bedrooms} 🛏 | {p.bathrooms} 🛁</p>
-        <p>{p.location.city}, {p.location.country}</p>
+      <div style={{ padding: "12px" }}>
+        <h3 style={{ margin: "0 0 5px" }}>{p.name}</h3>
+        <p style={{ margin: "0", fontWeight: "bold" }}>
+          {p.currency} {p.price}
+        </p>
+        <p style={{ margin: "5px 0" }}>
+          {p.bedrooms} 🛏 | {p.bathrooms} 🛁
+        </p>
+        <p style={{ margin: "0", color: "#555" }}>
+          {p.location.city}, {p.location.country}
+        </p>
       </div>
     </div>
   );
@@ -102,26 +123,47 @@ function Home() {
   return (
     <div>
       {/* Hero Section */}
-      <div style={{
-        backgroundImage: "url('https://picsum.photos/1600/400?blur')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        padding: "60px",
-        color: "white",
-        textAlign: "center",
-        position: "relative"
-      }}>
-        <h1>Welcome {username ? username : "Guest"} 👋</h1>
-        <p>Find your dream property anywhere in the world</p>
-        <input
-          type="text"
-          placeholder="Search by city..."
-          value={search}
-          onChange={handleSearch}
-          style={{ padding: "10px", width: "60%", borderRadius: "5px", border: "none", marginTop: "20px" }}
-        />
+      <div
+        style={{
+          backgroundImage: "url('https://picsum.photos/1600/400?blur')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          color: "white",
+          textAlign: "center",
+          position: "relative",
+          padding: "100px 20px",
+        }}
+      >
+        <div
+          style={{
+            background: "rgba(0,0,0,0.5)",
+            display: "inline-block",
+            padding: "30px 40px",
+            borderRadius: "10px",
+          }}
+        >
+          <h1 style={{ fontSize: "36px", marginBottom: "10px" }}>
+            Welcome {username ? username : "Guest"} 👋
+          </h1>
+          <p style={{ fontSize: "18px", marginBottom: "20px" }}>
+            Find your dream property anywhere in the world
+          </p>
+          <input
+            type="text"
+            placeholder="Search by city..."
+            value={search}
+            onChange={handleSearch}
+            style={{
+              padding: "12px",
+              width: "70%",
+              maxWidth: "400px",
+              borderRadius: "25px",
+              border: "none",
+              outline: "none",
+            }}
+          />
+        </div>
 
-        {/* ✅ Logout Button */}
         {username && (
           <button
             onClick={handleLogout}
@@ -130,11 +172,12 @@ function Home() {
               top: "20px",
               right: "20px",
               padding: "8px 16px",
-              background: "rgba(255, 0, 0, 0.8)",
+              background: "rgba(255, 0, 0, 0.85)",
               color: "white",
               border: "none",
-              borderRadius: "5px",
-              cursor: "pointer"
+              borderRadius: "20px",
+              cursor: "pointer",
+              fontWeight: "600",
             }}
           >
             Logout
@@ -144,26 +187,44 @@ function Home() {
 
       {/* Highlighted Top 10 */}
       {highlighted.length > 0 && (
-        <div style={{ padding: "20px" }}>
-          <h2>🔍 Top 10 Matches</h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: "20px" }}>
-            {highlighted.map((p) => <PropertyCard key={p.id} p={p} />)}
+        <div style={{ padding: "30px" }}>
+          <h2 style={{ marginBottom: "20px" }}>🔍 Top 10 Matches</h2>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+              gap: "20px",
+            }}
+          >
+            {highlighted.map((p) => (
+              <PropertyCard key={p.id} p={p} />
+            ))}
           </div>
         </div>
       )}
 
       {/* Infinite Scroll Results */}
-      <div style={{ padding: "20px" }}>
-        <h2>🏠 More Properties</h2>
+      <div style={{ padding: "30px" }}>
+        <h2 style={{ marginBottom: "20px" }}>🏠 More Properties</h2>
         <InfiniteScroll
           dataLength={properties.length}
           next={loadMore}
           hasMore={hasMore}
           loader={<h4>Loading...</h4>}
-          endMessage={<p style={{ textAlign: "center" }}>No more properties</p>}
+          endMessage={
+            <p style={{ textAlign: "center" }}>No more properties</p>
+          }
         >
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: "20px" }}>
-            {properties.map((p) => <PropertyCard key={p.id} p={p} />)}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+              gap: "20px",
+            }}
+          >
+            {properties.map((p) => (
+              <PropertyCard key={p.id} p={p} />
+            ))}
           </div>
         </InfiniteScroll>
       </div>
