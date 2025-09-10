@@ -1,84 +1,46 @@
-// src/api.js
+const BASE_URL = "https://prop-django-4.onrender.com/api";
 
-const cities = [
-  "New York", "London", "Paris", "Tokyo", "Sydney",
-  "Dubai", "Berlin", "Toronto", "San Francisco", "Singapore",
-  "Rome", "Bangkok", "Istanbul", "Los Angeles", "Chicago",
-  "Seoul", "Madrid", "Amsterdam", "Mumbai", "Mexico City"
-];
+// 🔹 Fetch properties with pagination & optional search
+export async function fetchProperties(page = 1, pageSize = 10, search = "") {
+  try {
+    const url = new URL(`${BASE_URL}/properties/`);
+    url.searchParams.append("page", page);
+    url.searchParams.append("page_size", pageSize);
+    if (search) url.searchParams.append("search", search);
 
-let dummyProperties = Array.from({ length: 200 }).map((_, i) => {
-  const city = cities[i % cities.length];
-  return {
-    id: i + 1,
-    name: `Luxury Apartment ${i + 1}`,
-    price: (100000 + i * 5000).toFixed(2),
-    currency: "USD",
-    location: { city, country: "Country X" },
-    area: { size: 100 + i, unit: "sqm" },
-    bedrooms: (i % 5) + 1,
-    bathrooms: (i % 3) + 1,
-    propertyType: "Apartment",
-    status: i % 2 === 0 ? "For Sale" : "For Rent",
-    rating: (Math.random() * 5).toFixed(2),
-    amenities: ["Pool", "Gym", "Parking"],
-    agent: { name: "Agent " + (i % 10), contact: "123456789" },
-    dateListed: new Date().toISOString(),
-    images: [
-      `https://picsum.photos/seed/${i}/400/250`,
-      `https://picsum.photos/seed/${i + 1}/400/250`
-    ]
-  };
-});
+    const res = await fetch(url, {
+      headers: { Accept: "application/json" },
+    });
 
-// ✅ helper for paginated + search
-export function fetchProperties(page, limit = 10, search = "") {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      let results = dummyProperties;
-      if (search) {
-        results = results.filter((p) =>
-          p.location.city.toLowerCase().includes(search.toLowerCase())
-        );
-      }
-      const start = (page - 1) * limit;
-      const end = start + limit;
-      resolve(results.slice(start, end));
-    }, 500);
-  });
+    if (!res.ok) {
+      throw new Error(`Failed to fetch properties: ${res.status}`);
+    }
+
+    const data = await res.json();
+
+    // ✅ Handle paginated or raw list
+    if (Array.isArray(data)) return data;
+    if (data.results) return data.results;
+    return [];
+  } catch (err) {
+    console.error("❌ API Fetch Error:", err);
+    return [];
+  }
 }
 
-// dummy login/signup
-export function loginUser(username, password) {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (username && password) {
-        resolve({ token: "dummy-jwt-token", username });
-      } else {
-        reject("Invalid credentials");
-      }
-    }, 500);
-  });
-}
-
-// Favorites handling
+// 🔹 Favorites stored in localStorage (per user)
 export function getFavorites(username) {
-  const data = JSON.parse(localStorage.getItem("favorites")) || {};
-  return data[username] || [];
+  return JSON.parse(localStorage.getItem(`favorites_${username}`)) || [];
 }
 
 export function toggleFavorite(username, property) {
-  const data = JSON.parse(localStorage.getItem("favorites")) || {};
-  const userFavs = data[username] || [];
-  const exists = userFavs.find((p) => p.id === property.id);
-
-  let updated;
+  let favorites = getFavorites(username);
+  const exists = favorites.find((p) => p.id === property.id);
   if (exists) {
-    updated = userFavs.filter((p) => p.id !== property.id);
+    favorites = favorites.filter((p) => p.id !== property.id);
   } else {
-    updated = [...userFavs, property];
+    favorites.push(property);
   }
-  data[username] = updated;
-  localStorage.setItem("favorites", JSON.stringify(data));
-  return updated;
+  localStorage.setItem(`favorites_${username}`, JSON.stringify(favorites));
+  return favorites;
 }

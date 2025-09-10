@@ -1,4 +1,3 @@
-// src/Home.js
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import InfiniteScroll from "react-infinite-scroll-component";
@@ -18,11 +17,13 @@ function Home({ username, setUsername }) {
       setFavorites(getFavorites(username));
     }
     loadMore();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadMore = async () => {
     const newProps = await fetchProperties(page, 10, search);
-    if (newProps.length === 0) {
+
+    if (!newProps || newProps.length === 0) {
       setHasMore(false);
       return;
     }
@@ -71,9 +72,9 @@ function Home({ username, setUsername }) {
 
   const isFavorite = (id) => favorites.some((p) => p.id === id);
 
-  const PropertyCard = ({ p }) => (
+  const PropertyCard = ({ p, index }) => (
     <div
-      key={p.id}
+      key={`${p.id}-${index}`}
       style={{
         border: "1px solid #ddd",
         borderRadius: "8px",
@@ -84,7 +85,7 @@ function Home({ username, setUsername }) {
       }}
     >
       <img
-        src={p.images[0]}
+        src={p.images?.[0] || "https://via.placeholder.com/400x300"}
         alt={p.name}
         style={{ width: "100%", height: "150px", objectFit: "cover" }}
       />
@@ -114,7 +115,7 @@ function Home({ username, setUsername }) {
           {p.bedrooms} 🛏 | {p.bathrooms} 🛁
         </p>
         <p style={{ margin: "0", color: "#555" }}>
-          {p.location.city}, {p.location.country}
+          {p.location?.city}, {p.location?.country}
         </p>
       </div>
     </div>
@@ -196,8 +197,8 @@ function Home({ username, setUsername }) {
               gap: "20px",
             }}
           >
-            {highlighted.map((p) => (
-              <PropertyCard key={p.id} p={p} />
+            {highlighted.map((p, index) => (
+              <PropertyCard key={`${p.id}-highlight-${index}`} p={p} index={index} />
             ))}
           </div>
         </div>
@@ -211,9 +212,7 @@ function Home({ username, setUsername }) {
           next={loadMore}
           hasMore={hasMore}
           loader={<h4>Loading...</h4>}
-          endMessage={
-            <p style={{ textAlign: "center" }}>No more properties</p>
-          }
+          endMessage={<p style={{ textAlign: "center" }}>No more properties</p>}
         >
           <div
             style={{
@@ -222,8 +221,8 @@ function Home({ username, setUsername }) {
               gap: "20px",
             }}
           >
-            {properties.map((p) => (
-              <PropertyCard key={p.id} p={p} />
+            {properties.map((p, index) => (
+              <PropertyCard key={`${p.id}-list-${index}`} p={p} index={index} />
             ))}
           </div>
         </InfiniteScroll>
